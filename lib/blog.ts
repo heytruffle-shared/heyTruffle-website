@@ -96,8 +96,32 @@ export function getPost(slug: string): Post | null {
    images, tables — is unaffected.
 
    Own Marked instance rather than the global `marked`: configuring the shared
-   singleton would silently change behaviour for any other call site. */
+   singleton would silently change behaviour for any other call site.
+
+   Internal links also get their trailing slash here. Markdown links render as
+   a plain <a>, which (unlike next/link) isn't normalized against
+   `trailingSlash: true` — so `[x](/blog/foo)` in a post shipped a URL that
+   308s to `/blog/foo/`, and Ahrefs flags every one of those hops. Fixing it at
+   render time covers the posts that already do this and any written later. */
+const SITE_ORIGIN = /^https?:\/\/(?:www\.)?heytruffle\.ai(?=\/|$)/i;
+
+function withTrailingSlash(href: string): string {
+  const internal = href.startsWith("/") && !href.startsWith("//");
+  if (!internal && !SITE_ORIGIN.test(href)) return href;
+
+  const path = href.replace(SITE_ORIGIN, "");
+  const [, pathname = "", suffix = ""] = /^([^?#]*)(.*)$/.exec(path) ?? [];
+  // Files (/images/x.webp, /sitemap.xml) are served without a slash.
+  if (pathname.endsWith("/") || /\.[a-z0-9]+$/i.test(pathname)) return href;
+
+  const origin = internal ? "" : "https://heytruffle.ai";
+  return `${origin}${pathname}/${suffix}`;
+}
+
 const renderer = new Marked({
+  walkTokens(token) {
+    if (token.type === "link") token.href = withTrailingSlash(token.href);
+  },
   renderer: {
     html({ text }) {
       return text
