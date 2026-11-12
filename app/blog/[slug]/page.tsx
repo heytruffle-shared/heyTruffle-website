@@ -29,11 +29,11 @@ export async function generateMetadata({
   const post = getPost(slug);
   if (!post) return { title: "Not found — heytruffle" };
   return {
-    title: `${post.title} — heytruffle`,
+    title: post.metaTitle ?? `${post.title} — heytruffle`,
     description: post.description,
     alternates: { canonical: `/blog/${slug}/` },
     openGraph: {
-      title: post.title,
+      title: post.metaTitle ?? post.title,
       description: post.description,
       images: [post.image],
       type: "article",

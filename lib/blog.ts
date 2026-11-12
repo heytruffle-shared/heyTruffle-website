@@ -45,6 +45,7 @@ function readPost(slug: string): Post {
   return {
     slug,
     title: data.title ?? slug,
+    metaTitle: data.metaTitle || undefined,
     description: data.description ?? "",
     date: data.date ?? "",
     category: data.category ?? "",

@@ -8,6 +8,8 @@
 export type PostMeta = {
   slug: string;
   title: string;
+  /** Optional SEO <title>, used verbatim instead of "`title` — heytruffle". */
+  metaTitle?: string;
   description: string;
   /** ISO date string, e.g. "2026-07-09". */
   date: string;
